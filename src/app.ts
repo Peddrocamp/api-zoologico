@@ -1,18 +1,22 @@
-import express from 'express';
-import cors from 'cors';
-import { Zoologico } from './model/Zoologico';
-import { Atracao } from './model/Atracao';
-import { Habitat } from './model/Habitat';
+import express from "express";
+import cors from "cors";
+import { Habitat } from "./model/Habitat";
+import { Atracao } from "./model/Atracao";
+import { Zoologico } from "./model/Zoologico";
+import { DatabaseModel } from "./model/DatabaseModel";
+import { Reptil } from "./model/Reptil";
+import { Mamifero } from "./model/Mamifero";
+import { Ave } from "./model/Ave";
 
 const server = express();
-const port = 3000;
+const port: number = 3000;
 
 server.use(express.json());
 server.use(cors());
 
-server.get('/', (req,res) =>{
- res.json('Olá mundo!!');
-})
+server.get('/', (req, res) => {
+    res.json("ola");
+});
 
 server.post('/habitat', (req, res) => {
     const { nome, animais } = req.body;
@@ -35,6 +39,30 @@ server.post('/zoologico', (req, res) => {
     res.status(200).json('Zoológico criado');
 });
 
- server.listen(port, ()  => {  
- console.log('Servidor rodando em http://localhost:${port}');
- })
+server.get('/reptil', async (req, res) => {
+    const repteis = await Reptil.listarRepteis();
+
+    res.status(200).json(repteis);
+})
+
+server.get('/ave', async (req, res) => {
+    const aves = await Ave.listarAves();
+
+    res.status(200).json(aves);
+})
+
+server.get('/mamifero', async (req, res) => {
+    const mamifero = await Mamifero.listarMamiferos();
+
+    res.status(200).json(mamifero);
+})
+
+new DatabaseModel().testeConexao().then((resbd) => {
+    if(resbd) {
+        server.listen(port, () => {
+            console.log(`Servidor rodando em http://localhost:${port}`);
+        })
+    } else {
+        console.log('Não foi possível conectar ao banco de dados');
+    }
+})

@@ -1,40 +1,85 @@
-import { Animal } from "./Animal"; // Importa a classe Animal do arquivo Animal.ts
+import { globalAgent } from "http";
+import { Animal } from "./Animal";
+import { DatabaseModel } from "./DatabaseModel";
+
+const database = new DatabaseModel().pool;
 
 /**
- * Classe que representa um mamífero, que é um tipo de animal.
- * Estende a classe Animal.
+ * Representa um mamífero no zoológico, que é uma subclasse de Animal.
  */
 export class Mamifero extends Animal {
-    private raca: string; // Declaração do atributo privado raca do tipo string.
+    /**
+     * A raça do mamífero.
+     */
+    private raca: string;
 
     /**
-     * Construtor da classe Mamifero.
-     * @param _raca A raça do mamífero.
+     * Cria uma nova instância de Mamifero.
+     * 
      * @param _nome O nome do mamífero.
      * @param _idade A idade do mamífero.
      * @param _genero O gênero do mamífero.
+     * @param _raca A raça do mamífero.
      */
-    constructor(_raca: string,
-                _nome: string,
-                _idade: number,
-                _genero: string) {
-        super(_nome, _idade, _genero); // Chama o construtor da classe pai (Animal) e passa os parâmetros necessários.
-        this.raca = _raca; // Inicializa o atributo raca com o valor passado no construtor.
+    constructor(_nome: string, 
+                _idade: number, 
+                _genero: string, 
+                _raca: string) {
+        super(_nome, _idade, _genero);
+        this.raca = _raca;
     }
 
     /**
-     * Obtém a raça do mamífero.
+     * Obtém A raça do mamífero.
+     * 
      * @returns A raça do mamífero.
      */
     public getRaca(): string {
-        return this.raca; // Retorna a raça do mamífero.
+        return this.raca;
     }
 
     /**
-     * Define a raça do mamífero.
-     * @param raca A raça a ser atribuída ao mamífero.
+     * Define A raça do mamífero.
+     * 
+     * @param _raca A raça a ser atribuído ao mamífero.
      */
-    public setRaca(raca: string): void {
-        this.raca = raca; // Define a raça do mamífero com o valor passado como parâmetro.
+    public setRaca(_raca: string): void {
+        this.raca = _raca;
+    }
+
+    static async listarMamiferos() {
+        const listaDeMamiferos: Array<Mamifero> = [];
+        try {
+            const queryReturn = await database.query(`SELECT * FROM  mamifero;`);
+            queryReturn.rows.forEach(mamifero => {
+                return listaDeMamiferos.push(mamifero);
+            });
+
+            // só pra testar se a lista veio certa do banco
+            console.log(listaDeMamiferos);
+
+            return listaDeMamiferos;
+        } catch (error) {
+            console.log('Erro no modelo');
+            console.log(error);
+            return "error";
+        }
+    }
+
+    static async cadastrarMamifero(Mamifero: Mamifero): Promise<any> {
+        try {
+            let insertResult = false;
+            await database.query(`INSERT INTO mamifero (nome, idade, genero, raca)
+                VALUES
+                ('${Mamifero.getNome().toUpperCase()}', ${Mamifero.getIdade()}, '${Mamifero.getGenero().toUpperCase()}', '${Mamifero.getRaca().toUpperCase()}');
+            `).then((result) => {
+                if(result.rowCount != 0) {
+                    insertResult = true;
+                }
+            });
+            return insertResult;
+        } catch(error) {
+            return error;
+        }
     }
 }

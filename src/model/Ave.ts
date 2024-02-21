@@ -1,52 +1,85 @@
-import { Habitat } from "./Habitat"; // Importa a classe Habitat do arquivo Habitat.ts
+import { globalAgent } from "http";
+import { Animal } from "./Animal";
+import { DatabaseModel } from "./DatabaseModel";
+
+const database = new DatabaseModel().pool;
 
 /**
- * Classe que representa uma atração em um zoológico.
+ * Representa um ave no zoológico, que é uma subclasse de Animal.
  */
-export class Atracao {
-
-    private nomeAtracao: string; // O nome da atração.
-    private listaHabitats: Array<Habitat>; // A lista de habitats da atração.
+export class Ave extends Animal {
+    /**
+     * A envergadura da ave.
+     */
+    private envergadura: number;
 
     /**
-     * Construtor da classe Atracao.
-     * @param _nome O nome da atração.
-     * @param _habitats A lista de habitats da atração.
+     * Cria uma nova instância de ave.
+     * 
+     * @param _nome O nome do ave.
+     * @param _idade A idade do ave.
+     * @param _genero O gênero do ave.
+     * @param _envergadura A envergadura da ave.
      */
-    constructor(_nome: string, _habitats: Array<Habitat>) {
-        this.nomeAtracao = _nome; // Inicializa o nome da atração com o valor passado no construtor.
-        this.listaHabitats = _habitats; // Inicializa a lista de habitats com o valor passado no construtor.
+    constructor(_nome: string, 
+                _idade: number, 
+                _genero: string, 
+                _envergadura: number) {
+        super(_nome, _idade, _genero);
+        this.envergadura = _envergadura;
     }
 
     /**
-     * Obtém o nome da atração.
-     * @returns O nome da atração.
+     * Obtém A envergadura da ave.
+     * 
+     * @returns A envergadura da ave.
      */
-    public getNomeAtracao(): string {
-        return  this.nomeAtracao; // Retorna o nome da atração.
+    public getEnvergadura(): number {
+        return this.envergadura;
     }
 
     /**
-     * Define o nome da atração.
-     * @param _nomeAtracao O nome a ser atribuído à atração.
+     * Define A envergadura da ave.
+     * 
+     * @param _envergadura A envergadura a ser atribuído ao ave.
      */
-    public setNomeHabitat(_nomeAtracao: string): void {
-        this.nomeAtracao = _nomeAtracao; // Define o nome da atração com o valor passado como parâmetro.
+    public setEnvergadura(_envergadura: number): void {
+        this.envergadura = _envergadura;
     }
 
-    /**
-     * Obtém a lista de habitats da atração.
-     * @returns A lista de habitats da atração.
-     */
-    public getListaHabitats(): Array<Habitat> {
-        return this.listaHabitats; // Retorna a lista de habitats da atração.
+    static async listarAves() {
+        const listaDeAves: Array<Ave> = [];
+        try {
+            const queryReturn = await database.query(`SELECT * FROM ave;`);
+            queryReturn.rows.forEach(ave => {
+                listaDeAves.push(ave);
+            });
+
+            // só pra testar se a lista veio certa do banco
+            console.log(listaDeAves);
+
+            return listaDeAves;
+        } catch (error) {
+            console.log('Erro no modelo');
+            console.log(error);
+            return "error";
+        }
     }
 
-    /**
-     * Define a lista de habitats da atração.
-     * @param _habitats A lista de habitats a ser atribuída à atração.
-     */
-    public setListaHabitats(_habitats: Array<Habitat>): void {
-        this.listaHabitats = _habitats; // Define a lista de habitats da atração com o valor passado como parâmetro.
+    static async cadastrarAve(Ave: Ave): Promise<any> {
+        try {
+            let insertResult = false;
+            await database.query(`INSERT INTO ave (nome, idade, genero, envergadura)
+                VALUES
+                ('${Ave.getNome().toUpperCase()}', ${Ave.getIdade()}, '${Ave.getGenero().toUpperCase()}', ${Ave.getEnvergadura()});
+            `).then((result) => {
+                if(result.rowCount != 0) {
+                    insertResult = true;
+                }
+            });
+            return insertResult;
+        } catch(error) {
+            return error;
+        }
     }
 }
